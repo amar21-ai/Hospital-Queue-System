@@ -43,6 +43,7 @@ public:
     // Core queue operations
     void addPatient(Patient* patient);
     Patient* serveNextPatient();
+    Patient* servePatientById(int patientId); // Emergency serve by ID
     void updatePriorities(time_t currentTime);
 
     // Service type queue operations

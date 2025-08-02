@@ -376,3 +376,26 @@ std::string QueueManager::getQueueStatus() {
         ", Critical: " + std::to_string(criticalQueue.size()) +
         ", Checkup: " + std::to_string(checkupQueue.size());
 }
+
+Patient* QueueManager::servePatientById(int patientId) {
+    // Search all queues for the patient
+    std::vector<std::vector<Patient*>*> queues = { &emergencyQueue, &criticalQueue, &checkupQueue };
+    for (auto queue : queues) {
+        auto it = std::find_if(queue->begin(), queue->end(),
+            [patientId](Patient* p) { return p->getId() == patientId; });
+        if (it != queue->end()) {
+            Patient* patient = *it;
+            // Remove from queue
+            queue->erase(it);
+            rebuildHeap(*queue); // Maintain heap property
+            // Remove from patientTable
+            patientTable.erase(patientId);
+            // Record service completion
+            recordServiceCompletion(patient, time(0));
+            std::cout << "Emergency! Serving Patient " << patientId << " immediately.\n";
+            return patient;
+        }
+    }
+    std::cout << "Patient " << patientId << " not found in any queue.\n";
+    return nullptr;
+}

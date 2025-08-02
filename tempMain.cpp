@@ -145,9 +145,10 @@ void runHospitalSystem() {
             << "8. Simulate Time Passing\n"
             << "9. Exit\n"
             << "10. Show Frequent Visitors\n"
-            << "Choice (1-10): ";
+            << "11. Emergency Serve Patient\n" // New option
+            << "Choice (1-11): ";
 
-        switch (getIntInput(1, 10)) {
+        switch (getIntInput(1, 11)) { // Update range
         case 1:
             addPatient(queue);
             break;
@@ -210,6 +211,20 @@ void runHospitalSystem() {
             }
             break;
         } 
+        case 11: {
+            cout << "\n🚨 Emergency Serve\nEnter Patient ID: ";
+            int id = getIntInput(1, 9999);
+            Patient* p = queue.servePatientById(id);
+            if (p) {
+                cout << "🩺 Emergency Served Patient " << p->getId()
+                    << " (Final Score: " << p->getPriorityScore()
+                    << ", Wait Time: " << p->getTotalWaitTimeMinutes() << " min)\n";
+                delete p;
+            } else {
+                cout << "❌ Patient not found in any queue!\n";
+            }
+            break;
+        }
         }
     }
 }

@@ -2,7 +2,7 @@
 <Project>
   <ProjectOutputs>
     <ProjectOutput>
-      <FullPath>D:\Hospital queue\Hospital-Queue-System\x64\Debug\DS project.exe</FullPath>
+      <FullPath>D:\Hospital queue\Hospital-Queue-System\x64\Release\DS project.exe</FullPath>
     </ProjectOutput>
   </ProjectOutputs>
   <ContentFiles />

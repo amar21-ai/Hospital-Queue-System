@@ -10,7 +10,6 @@ QueueManager::QueueManager(PriorityEngine* engine) {
 }
 
 QueueManager::~QueueManager() {
-    // Clean up remaining patients in queues
     for (auto patient : emergencyQueue) {
         delete patient;
     }
@@ -33,31 +32,57 @@ std::vector<Patient*>& QueueManager::getQueueByType(const std::string& serviceTy
     else if (serviceType == "Critical") {
         return criticalQueue;
     }
-    else { // "Checkup"
+    else {
         return checkupQueue;
     }
 }
 
 void QueueManager::addPatient(Patient* patient) {
-    // Calculate initial score
-    time_t now = time(0);
-    patient->updateWaitTime(now);
-    float score = engine->calculatePriorityScore(*patient, now, this);
-    patient->setPriorityScore(score);
+    // Check if patient already exists in any queue
+    auto existingPatient = patientTable.find(patient->getId());
+    if (existingPatient != patientTable.end()) {
+        // Update existing patient's data
+        time_t now = time(0);
+        existingPatient->second->updateWaitTime(now);
+        float score = engine->calculatePriorityScore(*(existingPatient->second), now, this);
+        existingPatient->second->setPriorityScore(score);
+        
+        // Remove and re-add to maintain heap property
+        std::vector<Patient*>& targetQueue = getQueueByType(existingPatient->second->getServiceType());
+        auto it = std::find(targetQueue.begin(), targetQueue.end(), existingPatient->second);
+        if (it != targetQueue.end()) {
+            size_t index = it - targetQueue.begin();
+            heapifyUp(targetQueue, index);
+            heapifyDown(targetQueue, index);
+        }
+        
+        std::cout << "Updated existing Patient " << patient->getId() 
+                  << " in " << patient->getServiceType()
+                  << " queue (New Score: " << score << ")\n";
+        
+        // Clean up the new duplicate patient object
+        delete patient;
+    } else {
+        // Add new patient as before
+        time_t now = time(0);
+        patient->updateWaitTime(now);
+        float score = engine->calculatePriorityScore(*patient, now, this);
+        patient->setPriorityScore(score);
 
-    // Add to appropriate service type queue
-    std::vector<Patient*>& targetQueue = getQueueByType(patient->getServiceType());
-    targetQueue.push_back(patient);
-    heapifyUp(targetQueue, targetQueue.size() - 1);
+        std::vector<Patient*>& targetQueue = getQueueByType(patient->getServiceType());
+        targetQueue.push_back(patient);
+        heapifyUp(targetQueue, targetQueue.size() - 1);
+         
+        std::cout << "Patient " << patient->getId() << " added to " << patient->getServiceType()
+            << " queue (Score: " << score << ")\n";
 
-    std::cout << "Patient " << patient->getId() << " added to " << patient->getServiceType()
-        << " queue (Score: " << score << ")\n";
-
-    patientTable[patient->getId()] = patient;
+        patientTable[patient->getId()] = patient;
+    }
 
     // Update visit count
     incrementVisitCount(patient->getId());
 }
+
 
 // Patient visit frequency methods
 void QueueManager::incrementVisitCount(int patientId) {
@@ -79,7 +104,6 @@ std::vector<int> QueueManager::getFrequentVisitors(int threshold) const {
 }
 
 std::string QueueManager::getNextServiceType() {
-    // Priority order: Emergency > Critical > Checkup
     if (!emergencyQueue.empty()) {
         return "Emergency";
     }
@@ -89,14 +113,14 @@ std::string QueueManager::getNextServiceType() {
     else if (!checkupQueue.empty()) {
         return "Checkup";
     }
-    return ""; // No patients
+    return ""; 
 }
 
 Patient* QueueManager::serveNextPatient() {
     std::string nextServiceType = getNextServiceType();
 
     if (nextServiceType.empty()) {
-        return nullptr; // No patients to serve
+        return nullptr;
     }
 
     std::vector<Patient*>& queue = getQueueByType(nextServiceType);
@@ -108,7 +132,6 @@ Patient* QueueManager::serveNextPatient() {
 
     std::cout << "Serving from " << nextServiceType << " queue: Patient " << next->getId() << "\n";
 
-    // Check if we need to merge queues
     if (queue.empty()) {
         mergeQueues();
     }
@@ -120,7 +143,6 @@ Patient* QueueManager::serveNextPatient() {
 }
 
 void QueueManager::mergeQueues() {
-    // Merge lower priority queues to higher priority service counters when they become empty
 
     if (emergencyQueue.empty() && !criticalQueue.empty()) {
         std::cout << "Emergency queue is now empty. Redirecting individuals from critical queue to emergency service counter.\n";
@@ -136,7 +158,6 @@ void QueueManager::mergeQueues() {
         rebuildHeap(criticalQueue);
     }
 
-    // If emergency is empty but critical has patients that were moved from checkup
     if (emergencyQueue.empty() && !criticalQueue.empty()) {
         std::cout << "Emergency queue is now empty. Redirecting individuals from critical queue to emergency service counter.\n";
         emergencyQueue = std::move(criticalQueue);
@@ -178,14 +199,12 @@ void QueueManager::rebuildHeap(std::vector<Patient*>& heap) {
 }
 
 void QueueManager::updatePriorities(time_t currentTime) {
-    // Update Emergency queue priorities
     for (auto& patient : emergencyQueue) {
         time_t waitTimeSec = currentTime - patient->getArrivalTime();
         patient->updateWaitTime(currentTime);
 
         float newScore = engine->calculatePriorityScore(*patient, currentTime, this);
 
-        // Apply fairness boost if needed
         int waitTimeMin = waitTimeSec / 60;
         if (waitTimeMin > maxWaitTime) {
             float extraWait = waitTimeMin - maxWaitTime;
@@ -195,14 +214,12 @@ void QueueManager::updatePriorities(time_t currentTime) {
         patient->setPriorityScore(newScore);
     }
 
-    // Update Critical queue priorities
     for (auto& patient : criticalQueue) {
         time_t waitTimeSec = currentTime - patient->getArrivalTime();
         patient->updateWaitTime(currentTime);
 
         float newScore = engine->calculatePriorityScore(*patient, currentTime, this);
 
-        // Apply fairness boost if needed
         int waitTimeMin = waitTimeSec / 60;
         if (waitTimeMin > maxWaitTime) {
             float extraWait = waitTimeMin - maxWaitTime;
@@ -212,14 +229,12 @@ void QueueManager::updatePriorities(time_t currentTime) {
         patient->setPriorityScore(newScore);
     }
 
-    // Update Checkup queue priorities
     for (auto& patient : checkupQueue) {
         time_t waitTimeSec = currentTime - patient->getArrivalTime();
         patient->updateWaitTime(currentTime);
 
         float newScore = engine->calculatePriorityScore(*patient, currentTime, this);
 
-        // Apply fairness boost if needed
         int waitTimeMin = waitTimeSec / 60;
         if (waitTimeMin > maxWaitTime) {
             float extraWait = waitTimeMin - maxWaitTime;
@@ -229,7 +244,6 @@ void QueueManager::updatePriorities(time_t currentTime) {
         patient->setPriorityScore(newScore);
     }
 
-    // Rebuild all heaps
     rebuildHeap(emergencyQueue);
     rebuildHeap(criticalQueue);
     rebuildHeap(checkupQueue);
@@ -294,7 +308,6 @@ int QueueManager::getQueueSize(const std::string& serviceType) {
 }
 
 void QueueManager::recordServiceCompletion(Patient* patient, time_t serviceTime) {
-    // Create a copy of the patient for history
     Patient* historyPatient = new Patient(*patient);
     historyPatient->setServiceTime(serviceTime);
     serviceHistory.push_back(historyPatient);
@@ -345,14 +358,12 @@ std::vector<Patient*> QueueManager::getServiceHistoryByQueueType(const std::stri
 }
 
 void QueueManager::addPatientAtTime(Patient* patient, time_t timestamp) {
-    // Set the arrival time to the specified timestamp
     patient->setArrivalTime(timestamp);
 
     // Calculate priority score based on the timestamp
     float score = engine->calculatePriorityScore(*patient, timestamp, this);
     patient->setPriorityScore(score);
 
-    // Add to appropriate service type queue
     std::vector<Patient*>& targetQueue = getQueueByType(patient->getServiceType());
     targetQueue.push_back(patient);
     heapifyUp(targetQueue, targetQueue.size() - 1);

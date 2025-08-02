@@ -36,9 +36,6 @@ void SimulationManager::loadEventsFromJson(const std::string& filename) {
 void SimulationManager::parseJsonEvents(const std::string& jsonContent) {
     events.clear();
 
-    // Simple JSON parsing (basic implementation)
-    // Looking for patterns like: "timestamp": 5, "patientId": 101, etc.
-
     std::istringstream iss(jsonContent);
     std::string line;
 
@@ -46,7 +43,6 @@ void SimulationManager::parseJsonEvents(const std::string& jsonContent) {
     bool inEvent = false;
 
     while (std::getline(iss, line)) {
-        // Remove whitespace
         line.erase(std::remove_if(line.begin(), line.end(), ::isspace), line.end());
 
         if (line.find("{") != std::string::npos) {
@@ -58,7 +54,6 @@ void SimulationManager::parseJsonEvents(const std::string& jsonContent) {
             inEvent = false;
         }
         else if (inEvent) {
-            // Parse key-value pairs
             if (line.find("\"timestamp\":") != std::string::npos) {
                 size_t pos = line.find(":") + 1;
                 size_t end = line.find(",");
@@ -85,7 +80,6 @@ void SimulationManager::parseJsonEvents(const std::string& jsonContent) {
         }
     }
 
-    // Sort events by timestamp
     std::sort(events.begin(), events.end(),
         [](const SimulationEvent& a, const SimulationEvent& b) {
             return a.timestamp < b.timestamp;
@@ -108,17 +102,14 @@ void SimulationManager::runSimulation() {
     while (eventIndex < events.size()) {
         SimulationEvent& event = events[eventIndex];
 
-        // Wait until it's time for this event
         if (event.timestamp > currentTime) {
             std::cout << "\n? Time: " << event.timestamp << " minutes\n";
             currentTime = event.timestamp;
         }
 
-        // Process all events at this timestamp
         while (eventIndex < events.size() && events[eventIndex].timestamp == currentTime) {
             SimulationEvent& e = events[eventIndex];
 
-            // Create patient and add to queue
             Patient* patient = new Patient(e.patientId, e.urgency, e.serviceType);
             time_t eventTime = simulationStartTime + (e.timestamp * 60);
 
@@ -133,11 +124,9 @@ void SimulationManager::runSimulation() {
             eventIndex++;
         }
 
-        // Update priorities for current time
         time_t currentActualTime = simulationStartTime + (currentTime * 60);
         queueManager->updatePriorities(currentActualTime);
 
-        // Small delay for visualization
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 
@@ -155,7 +144,6 @@ void SimulationManager::addEvent(int timestamp, int patientId, int urgency, cons
 
     events.push_back(event);
 
-    // Re-sort events
     std::sort(events.begin(), events.end(),
         [](const SimulationEvent& a, const SimulationEvent& b) {
             return a.timestamp < b.timestamp;

@@ -1,2 +1,51 @@
+<<<<<<< Updated upstream
 ﻿  PriorityEngine.cpp
   DS project.vcxproj -> C:\Users\youss\Source\Repos\Hospital-Queue-System\x64\Debug\DS project.exe
+=======
+﻿  AdminConsole.cpp
+  AdminUI.cpp
+D:\Hospital queue\Hospital-Queue-System\AdminUI.cpp(61,40): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+D:\Hospital queue\Hospital-Queue-System\AdminUI.cpp(78,17): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+  Patient.cpp
+D:\Hospital queue\Hospital-Queue-System\Patient.cpp(64,40): warning C4244: 'return': conversion from 'time_t' to 'int', possible loss of data
+D:\Hospital queue\Hospital-Queue-System\Patient.cpp(69,40): warning C4244: 'return': conversion from 'time_t' to 'int', possible loss of data
+  PriorityEngine.cpp
+  QueueManager.cpp
+D:\Hospital queue\Hospital-Queue-System\QueueManager.cpp(51,47): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+D:\Hospital queue\Hospital-Queue-System\QueueManager.cpp(136,14): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\Hospital queue\Hospital-Queue-System\QueueManager.cpp(167,25): warning C4244: 'initializing': conversion from 'time_t' to 'int', possible loss of data
+D:\Hospital queue\Hospital-Queue-System\QueueManager.cpp(169,29): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+D:\Hospital queue\Hospital-Queue-System\QueueManager.cpp(184,25): warning C4244: 'initializing': conversion from 'time_t' to 'int', possible loss of data
+D:\Hospital queue\Hospital-Queue-System\QueueManager.cpp(186,29): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+D:\Hospital queue\Hospital-Queue-System\QueueManager.cpp(201,25): warning C4244: 'initializing': conversion from 'time_t' to 'int', possible loss of data
+D:\Hospital queue\Hospital-Queue-System\QueueManager.cpp(203,29): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+D:\Hospital queue\Hospital-Queue-System\QueueManager.cpp(271,44): warning C4267: 'return': conversion from 'size_t' to 'int', possible loss of data
+D:\Hospital queue\Hospital-Queue-System\QueueManager.cpp(336,47): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+  ReportManager.cpp
+D:\Hospital queue\Hospital-Queue-System\ReportManager.cpp(368,62): warning C4267: 'return': conversion from 'size_t' to 'int', possible loss of data
+  SimulationManager.cpp
+  tempMain.cpp
+D:\Hospital queue\Hospital-Queue-System\tempMain.cpp(32,13): warning C4566: character represented by universal-character-name '\u23F3' cannot be represented in the current code page (1252)
+D:\Hospital queue\Hospital-Queue-System\tempMain.cpp(38,13): warning C4566: character represented by universal-character-name '\u2795' cannot be represented in the current code page (1252)
+D:\Hospital queue\Hospital-Queue-System\tempMain.cpp(42,13): warning C4566: character represented by universal-character-name '\U0001FA7A' cannot be represented in the current code page (1252)
+D:\Hospital queue\Hospital-Queue-System\tempMain.cpp(47,13): warning C4566: character represented by universal-character-name '\U0001F3F7' cannot be represented in the current code page (1252)
+D:\Hospital queue\Hospital-Queue-System\tempMain.cpp(47,13): warning C4566: character represented by universal-character-name '\uFE0F' cannot be represented in the current code page (1252)
+D:\Hospital queue\Hospital-Queue-System\tempMain.cpp(56,13): warning C4566: character represented by universal-character-name '\u2705' cannot be represented in the current code page (1252)
+D:\Hospital queue\Hospital-Queue-System\tempMain.cpp(64,13): warning C4566: character represented by universal-character-name '\U0001F3AC' cannot be represented in the current code page (1252)
+D:\Hospital queue\Hospital-Queue-System\tempMain.cpp(82,21): warning C4566: character represented by universal-character-name '\u274C' cannot be represented in the current code page (1252)
+D:\Hospital queue\Hospital-Queue-System\tempMain.cpp(93,17): warning C4566: character represented by universal-character-name '\U0001F680' cannot be represented in the current code page (1252)
+D:\Hospital queue\Hospital-Queue-System\tempMain.cpp(99,13): warning C4566: character represented by universal-character-name '\U0001F504' cannot be represented in the current code page (1252)
+D:\Hospital queue\Hospital-Queue-System\tempMain.cpp(106,21): warning C4566: character represented by universal-character-name '\U0001FA7A' cannot be represented in the current code page (1252)
+D:\Hospital queue\Hospital-Queue-System\tempMain.cpp(112,21): warning C4566: character represented by universal-character-name '\u274C' cannot be represented in the current code page (1252)
+D:\Hospital queue\Hospital-Queue-System\tempMain.cpp(135,13): warning C4566: character represented by universal-character-name '\U0001F3E5' cannot be represented in the current code page (1252)
+D:\Hospital queue\Hospital-Queue-System\tempMain.cpp(139,17): warning C4566: character represented by universal-character-name '\U0001F3E0' cannot be represented in the current code page (1252)
+D:\Hospital queue\Hospital-Queue-System\tempMain.cpp(159,25): warning C4566: character represented by universal-character-name '\U0001FA7A' cannot be represented in the current code page (1252)
+D:\Hospital queue\Hospital-Queue-System\tempMain.cpp(165,25): warning C4566: character represented by universal-character-name '\u274C' cannot be represented in the current code page (1252)
+D:\Hospital queue\Hospital-Queue-System\tempMain.cpp(175,21): warning C4566: character represented by universal-character-name '\U0001F4CB' cannot be represented in the current code page (1252)
+D:\Hospital queue\Hospital-Queue-System\tempMain.cpp(192,21): warning C4566: character represented by universal-character-name '\u23F1' cannot be represented in the current code page (1252)
+D:\Hospital queue\Hospital-Queue-System\tempMain.cpp(192,21): warning C4566: character represented by universal-character-name '\uFE0F' cannot be represented in the current code page (1252)
+D:\Hospital queue\Hospital-Queue-System\tempMain.cpp(194,21): warning C4566: character represented by universal-character-name '\u2705' cannot be represented in the current code page (1252)
+D:\Hospital queue\Hospital-Queue-System\tempMain.cpp(198,21): warning C4566: character represented by universal-character-name '\U0001F44B' cannot be represented in the current code page (1252)
+  Generating Code...
+  DS project.vcxproj -> D:\Hospital queue\Hospital-Queue-System\x64\Debug\DS project.exe
+>>>>>>> Stashed changes

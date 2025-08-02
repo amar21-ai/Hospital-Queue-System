@@ -135,7 +135,7 @@ void ReportManager::generateQueueTypeTimeReport(const std::string& queueType,
 
 void ReportManager::generateFullReport(SortBy sortBy, SortOrder order) {
     time_t now = time(0);
-    time_t dayAgo = now - (24 * 60 * 60); // Last 24 hours
+    time_t dayAgo = now - (24 * 60 * 60); 
 
     std::vector<Patient*> allPatients = queueManager->getServiceHistory(dayAgo, now);
 
@@ -152,7 +152,6 @@ void ReportManager::displayPatients(const std::vector<Patient*>& patients, const
     std::cout << "\n" << title << "\n";
     std::cout << std::string(title.length() + 10, '=') << "\n\n";
 
-    // Header
     std::cout << std::left << std::setw(8) << "ID"
         << std::setw(12) << "Service Type"
         << std::setw(10) << "Urgency"
@@ -162,7 +161,6 @@ void ReportManager::displayPatients(const std::vector<Patient*>& patients, const
         << std::setw(20) << "Service Time" << "\n";
     std::cout << std::string(92, '-') << "\n";
 
-    // Patient data
     for (const auto& patient : patients) {
         std::cout << std::left << std::setw(8) << patient->getId()
             << std::setw(12) << patient->getServiceType()
@@ -176,7 +174,6 @@ void ReportManager::displayPatients(const std::vector<Patient*>& patients, const
     std::cout << std::string(92, '-') << "\n";
     std::cout << "Total patients: " << patients.size() << "\n";
 
-    // Calculate statistics for this subset
     if (!patients.empty()) {
         int totalWaitTime = 0;
         for (const auto& patient : patients) {
@@ -325,14 +322,12 @@ void ReportManager::showStatistics() {
     std::cout << "Average wait time: " << formatDuration(static_cast<int>(avgWait)) << "\n";
 
     if (totalServed > 0) {
-        // Additional statistics
         time_t now = time(0);
         time_t dayAgo = now - (24 * 60 * 60);
         std::vector<Patient*> recentPatients = queueManager->getServiceHistory(dayAgo, now);
 
         std::cout << "Patients served (last 24h): " << recentPatients.size() << "\n";
 
-        // Service type breakdown
         int emergency = 0, critical = 0, checkup = 0;
         for (auto patient : recentPatients) {
             if (patient->getServiceType() == "Emergency") emergency++;
@@ -349,7 +344,7 @@ void ReportManager::showStatistics() {
 
 double ReportManager::getAverageWaitTime() {
     time_t now = time(0);
-    time_t weekAgo = now - (7 * 24 * 60 * 60); // Last week
+    time_t weekAgo = now - (7 * 24 * 60 * 60); 
     std::vector<Patient*> patients = queueManager->getServiceHistory(weekAgo, now);
 
     if (patients.empty()) return 0.0;
@@ -364,7 +359,7 @@ double ReportManager::getAverageWaitTime() {
 
 int ReportManager::getTotalPatientsServed() {
     time_t now = time(0);
-    time_t weekAgo = now - (7 * 24 * 60 * 60); // Last week
+    time_t weekAgo = now - (7 * 24 * 60 * 60); 
     return queueManager->getServiceHistory(weekAgo, now).size();
 }
 

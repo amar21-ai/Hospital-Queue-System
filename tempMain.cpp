@@ -11,7 +11,6 @@
 #include <chrono>
 using namespace std;
 
-// Helper function for safe integer input
 int getIntInput(int min, int max) {
     int choice;
     while (true) {
@@ -30,7 +29,7 @@ int getIntInput(int min, int max) {
 
 void simulateTimePassing(QueueManager& queue, int minutes) {
     cout << "\n⏳ Simulating " << minutes << " minutes...\n";
-    this_thread::sleep_for(chrono::seconds(1)); // Visual feedback
+    this_thread::sleep_for(chrono::seconds(1));
     queue.updatePriorities(time(0) + minutes * 60);
 }
 
@@ -125,7 +124,6 @@ void runHospitalSystem() {
     AdminUI adminUI(&console);
     ReportManager reportManager(&queue);
 
-    // Initial configuration
     console.setWeights(0.5f, 0.3f, 0.2f);
     console.setServiceTypeScore("Emergency", 10);
     console.setServiceTypeScore("Critical", 8);

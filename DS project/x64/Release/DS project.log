@@ -1,0 +1,19 @@
+﻿  QueueManager.cpp
+D:\Hospital queue\Hospital-Queue-System\QueueManager.cpp(55,36): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+D:\Hospital queue\Hospital-Queue-System\QueueManager.cpp(56,38): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+D:\Hospital queue\Hospital-Queue-System\QueueManager.cpp(74,51): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+D:\Hospital queue\Hospital-Queue-System\QueueManager.cpp(179,14): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\Hospital queue\Hospital-Queue-System\QueueManager.cpp(208,25): warning C4244: 'initializing': conversion from 'time_t' to 'int', possible loss of data
+D:\Hospital queue\Hospital-Queue-System\QueueManager.cpp(210,29): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+D:\Hospital queue\Hospital-Queue-System\QueueManager.cpp(223,25): warning C4244: 'initializing': conversion from 'time_t' to 'int', possible loss of data
+D:\Hospital queue\Hospital-Queue-System\QueueManager.cpp(225,29): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+D:\Hospital queue\Hospital-Queue-System\QueueManager.cpp(238,25): warning C4244: 'initializing': conversion from 'time_t' to 'int', possible loss of data
+D:\Hospital queue\Hospital-Queue-System\QueueManager.cpp(240,29): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+D:\Hospital queue\Hospital-Queue-System\QueueManager.cpp(307,44): warning C4267: 'return': conversion from 'size_t' to 'int', possible loss of data
+D:\Hospital queue\Hospital-Queue-System\QueueManager.cpp(369,47): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+  Generating code
+  45 of 1197 functions ( 3.8%) were compiled, the rest were copied from previous compilation.
+    28 functions were new in current compilation
+    44 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  DS project.vcxproj -> D:\Hospital queue\Hospital-Queue-System\x64\Release\DS project.exe

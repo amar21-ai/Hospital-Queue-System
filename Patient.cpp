@@ -56,8 +56,6 @@ void Patient::setServiceTime(time_t time) {
 }
 
 void Patient::updateWaitTime(time_t currentTime) {
-    // This method is used by QueueManager to update priorities
-    // The actual wait time calculation is done in other methods
 }
 
 int Patient::getWaitTimeMinutes(time_t currentTime) {
@@ -65,6 +63,6 @@ int Patient::getWaitTimeMinutes(time_t currentTime) {
 }
 
 int Patient::getTotalWaitTimeMinutes() {
-    if (serviceTime == 0) return 0; // Not served yet
+    if (serviceTime == 0) return 0;
     return (serviceTime - arrivalTime) / 60;
 }

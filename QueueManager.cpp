@@ -42,7 +42,7 @@ void QueueManager::addPatient(Patient* patient) {
     // Calculate initial score
     time_t now = time(0);
     patient->updateWaitTime(now);
-    float score = engine->calculatePriorityScore(*patient, now);
+    float score = engine->calculatePriorityScore(*patient, now, this);
     patient->setPriorityScore(score);
 
     // Add to appropriate service type queue
@@ -54,6 +54,28 @@ void QueueManager::addPatient(Patient* patient) {
         << " queue (Score: " << score << ")\n";
 
     patientTable[patient->getId()] = patient;
+
+    // Update visit count
+    incrementVisitCount(patient->getId());
+}
+
+// Patient visit frequency methods
+void QueueManager::incrementVisitCount(int patientId) {
+    patientVisitCount[patientId]++;
+}
+
+int QueueManager::getVisitCount(int patientId) const {
+    auto it = patientVisitCount.find(patientId);
+    return (it != patientVisitCount.end()) ? it->second : 0;
+}
+
+std::vector<int> QueueManager::getFrequentVisitors(int threshold) const {
+    std::vector<int> frequent;
+    for (const auto& entry : patientVisitCount) {
+        if (entry.second >= threshold)
+            frequent.push_back(entry.first);
+    }
+    return frequent;
 }
 
 std::string QueueManager::getNextServiceType() {
@@ -161,7 +183,7 @@ void QueueManager::updatePriorities(time_t currentTime) {
         time_t waitTimeSec = currentTime - patient->getArrivalTime();
         patient->updateWaitTime(currentTime);
 
-        float newScore = engine->calculatePriorityScore(*patient, currentTime);
+        float newScore = engine->calculatePriorityScore(*patient, currentTime, this);
 
         // Apply fairness boost if needed
         int waitTimeMin = waitTimeSec / 60;
@@ -178,7 +200,7 @@ void QueueManager::updatePriorities(time_t currentTime) {
         time_t waitTimeSec = currentTime - patient->getArrivalTime();
         patient->updateWaitTime(currentTime);
 
-        float newScore = engine->calculatePriorityScore(*patient, currentTime);
+        float newScore = engine->calculatePriorityScore(*patient, currentTime, this);
 
         // Apply fairness boost if needed
         int waitTimeMin = waitTimeSec / 60;
@@ -195,7 +217,7 @@ void QueueManager::updatePriorities(time_t currentTime) {
         time_t waitTimeSec = currentTime - patient->getArrivalTime();
         patient->updateWaitTime(currentTime);
 
-        float newScore = engine->calculatePriorityScore(*patient, currentTime);
+        float newScore = engine->calculatePriorityScore(*patient, currentTime, this);
 
         // Apply fairness boost if needed
         int waitTimeMin = waitTimeSec / 60;
@@ -327,7 +349,7 @@ void QueueManager::addPatientAtTime(Patient* patient, time_t timestamp) {
     patient->setArrivalTime(timestamp);
 
     // Calculate priority score based on the timestamp
-    float score = engine->calculatePriorityScore(*patient, timestamp);
+    float score = engine->calculatePriorityScore(*patient, timestamp, this);
     patient->setPriorityScore(score);
 
     // Add to appropriate service type queue

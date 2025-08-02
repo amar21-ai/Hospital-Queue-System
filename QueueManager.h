@@ -25,6 +25,9 @@ private:
     // Service history for reporting
     std::vector<Patient*> serviceHistory;
 
+    // Patient visit frequency tracker
+    std::unordered_map<int, int> patientVisitCount;
+
     // Helper functions for heap operations
     void heapifyUp(std::vector<Patient*>& heap, int index);
     void heapifyDown(std::vector<Patient*>& heap, int index);
@@ -65,6 +68,11 @@ public:
     // Simulation support
     void addPatientAtTime(Patient* patient, time_t timestamp);
     std::string getQueueStatus();
+
+    // Patient visit frequency methods
+    void incrementVisitCount(int patientId);
+    int getVisitCount(int patientId) const;
+    std::vector<int> getFrequentVisitors(int threshold) const;
 };
 
 #endif

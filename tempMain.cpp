@@ -146,9 +146,10 @@ void runHospitalSystem() {
             << "7. Generate Reports\n"
             << "8. Simulate Time Passing\n"
             << "9. Exit\n"
-            << "Choice (1-9): ";
+            << "10. Show Frequent Visitors\n"
+            << "Choice (1-10): ";
 
-        switch (getIntInput(1, 9)) {
+        switch (getIntInput(1, 10)) {
         case 1:
             addPatient(queue);
             break;
@@ -197,6 +198,20 @@ void runHospitalSystem() {
         case 9:
             cout << "\n👋 System shutdown. Thank you for using Smart Hospital Queue Management!\n";
             return;
+        case 10: {
+            cout << "\nEnter visit threshold: ";
+            int threshold = getIntInput(1, 100);
+            auto frequent = queue.getFrequentVisitors(threshold);
+            cout << "\nFrequent Visitors (Visits >= " << threshold << "):\n";
+            if (frequent.empty()) {
+                cout << "No frequent visitors found.\n";
+            } else {
+                for (int id : frequent) {
+                    cout << "Patient ID: " << id << " | Visits: " << queue.getVisitCount(id) << "\n";
+                }
+            }
+            break;
+        } 
         }
     }
 }

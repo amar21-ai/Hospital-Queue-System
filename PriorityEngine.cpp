@@ -1,4 +1,5 @@
 #include "PriorityEngine.h"
+#include "QueueManager.h"
 
 PriorityEngine::PriorityEngine() {
     urgencyWeight = 0.5f;
@@ -20,11 +21,24 @@ void PriorityEngine::setServiceTypeScore(string type, float score) {
     serviceTypeScores[type] = score;
 }
 
-float PriorityEngine::calculatePriorityScore(Patient& patient, time_t currentTime) {
+float PriorityEngine::calculatePriorityScore(Patient& patient, time_t currentTime, const QueueManager* queueManager) {
     time_t waitTime = currentTime - patient.getArrivalTime();
     float serviceScore = serviceTypeScores[patient.getServiceType()];
 
-    return (patient.getUrgency() * urgencyWeight) +
-        (waitTime * waitTimeWeight) +
-        (serviceScore * serviceTypeWeight);
+    float visitBonus = 0.0f;
+    if (queueManager) {
+        int visits = queueManager->getVisitCount(patient.getId());
+        if (visits >= 25) {
+            visitBonus = 2.0f; // Highest bonus
+        } else if (visits >= 10) {
+            visitBonus = 1.0f;
+        } else if (visits >= 5) {
+            visitBonus = 0.5f;
+        }
+    }
+
+    return (patient.getUrgency() * urgencyWeight)
+        + (waitTime * waitTimeWeight)
+        + (serviceScore * serviceTypeWeight)
+        + visitBonus;
 }

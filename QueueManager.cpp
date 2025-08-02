@@ -11,10 +11,13 @@ QueueManager::QueueManager(PriorityEngine* engine) {
 
 QueueManager::~QueueManager() {
     // Clean up remaining patients in queues
-    for (auto patient : vipQueue) {
+    for (auto patient : emergencyQueue) {
         delete patient;
     }
-    for (auto patient : regularQueue) {
+    for (auto patient : criticalQueue) {
+        delete patient;
+    }
+    for (auto patient : checkupQueue) {
         delete patient;
     }
     // Clean up service history
@@ -23,14 +26,16 @@ QueueManager::~QueueManager() {
     }
 }
 
-std::string QueueManager::determineQueueType(Patient* patient) {
-    float score = patient->getPriorityScore();
-    // VIP threshold - adjust based on your needs
-    // Patients with high priority scores (>= 8.0) go to VIP
-    if (score >= 8.0f || patient->getServiceType() == "Emergency") {
-        return "VIP";
+std::vector<Patient*>& QueueManager::getQueueByType(const std::string& serviceType) {
+    if (serviceType == "Emergency") {
+        return emergencyQueue;
     }
-    return "Regular";
+    else if (serviceType == "Critical") {
+        return criticalQueue;
+    }
+    else { // "Checkup"
+        return checkupQueue;
+    }
 }
 
 void QueueManager::addPatient(Patient* patient) {
@@ -40,68 +45,81 @@ void QueueManager::addPatient(Patient* patient) {
     float score = engine->calculatePriorityScore(*patient, now);
     patient->setPriorityScore(score);
 
-    // Determine which queue to add to
-    std::string queueType = determineQueueType(patient);
+    // Add to appropriate service type queue
+    std::vector<Patient*>& targetQueue = getQueueByType(patient->getServiceType());
+    targetQueue.push_back(patient);
+    heapifyUp(targetQueue, targetQueue.size() - 1);
 
-    if (queueType == "VIP") {
-        vipQueue.push_back(patient);
-        heapifyUp(vipQueue, vipQueue.size() - 1);
-        std::cout << "Patient " << patient->getId() << " added to VIP queue (Score: "
-            << score << ")\n";
-    }
-    else {
-        regularQueue.push_back(patient);
-        heapifyUp(regularQueue, regularQueue.size() - 1);
-        std::cout << "Patient " << patient->getId() << " added to Regular queue (Score: "
-            << score << ")\n";
-    }
+    std::cout << "Patient " << patient->getId() << " added to " << patient->getServiceType()
+        << " queue (Score: " << score << ")\n";
 
     patientTable[patient->getId()] = patient;
 }
 
+std::string QueueManager::getNextServiceType() {
+    // Priority order: Emergency > Critical > Checkup
+    if (!emergencyQueue.empty()) {
+        return "Emergency";
+    }
+    else if (!criticalQueue.empty()) {
+        return "Critical";
+    }
+    else if (!checkupQueue.empty()) {
+        return "Checkup";
+    }
+    return ""; // No patients
+}
+
 Patient* QueueManager::serveNextPatient() {
-    Patient* next = nullptr;
+    std::string nextServiceType = getNextServiceType();
 
-    // Always serve from VIP queue first
-    if (!vipQueue.empty()) {
-        next = vipQueue.front();
-        std::swap(vipQueue[0], vipQueue.back());
-        vipQueue.pop_back();
-        heapifyDown(vipQueue, 0);
-        std::cout << "Serving from VIP queue: Patient " << next->getId() << "\n";
+    if (nextServiceType.empty()) {
+        return nullptr; // No patients to serve
     }
-    // If VIP is empty, check if we should merge regular queue to VIP
-    else if (!regularQueue.empty()) {
+
+    std::vector<Patient*>& queue = getQueueByType(nextServiceType);
+    Patient* next = queue.front();
+
+    std::swap(queue[0], queue.back());
+    queue.pop_back();
+    heapifyDown(queue, 0);
+
+    std::cout << "Serving from " << nextServiceType << " queue: Patient " << next->getId() << "\n";
+
+    // Check if we need to merge queues
+    if (queue.empty()) {
         mergeQueues();
-        if (!vipQueue.empty()) {
-            next = vipQueue.front();
-            std::swap(vipQueue[0], vipQueue.back());
-            vipQueue.pop_back();
-            heapifyDown(vipQueue, 0);
-            std::cout << "VIP queue was empty. Merged regular queue. Serving Patient "
-                << next->getId() << "\n";
-        }
     }
 
-    if (next) {
-        patientTable.erase(next->getId());
-        // Record service completion time
-        recordServiceCompletion(next, time(0));
-    }
+    patientTable.erase(next->getId());
+    recordServiceCompletion(next, time(0));
 
     return next;
 }
 
 void QueueManager::mergeQueues() {
-    if (vipQueue.empty() && !regularQueue.empty()) {
-        std::cout << "VIP queue is now empty. Redirecting individuals from regular queue to VIP service counter.\n";
+    // Merge lower priority queues to higher priority service counters when they become empty
 
-        // Move all patients from regular to VIP queue
-        vipQueue = std::move(regularQueue);
-        regularQueue.clear();
+    if (emergencyQueue.empty() && !criticalQueue.empty()) {
+        std::cout << "Emergency queue is now empty. Redirecting individuals from critical queue to emergency service counter.\n";
+        emergencyQueue = std::move(criticalQueue);
+        criticalQueue.clear();
+        rebuildHeap(emergencyQueue);
+    }
 
-        // Rebuild heap for VIP queue
-        rebuildHeap(vipQueue);
+    if (criticalQueue.empty() && !checkupQueue.empty()) {
+        std::cout << "Critical queue is now empty. Redirecting individuals from checkup queue to critical service counter.\n";
+        criticalQueue = std::move(checkupQueue);
+        checkupQueue.clear();
+        rebuildHeap(criticalQueue);
+    }
+
+    // If emergency is empty but critical has patients that were moved from checkup
+    if (emergencyQueue.empty() && !criticalQueue.empty()) {
+        std::cout << "Emergency queue is now empty. Redirecting individuals from critical queue to emergency service counter.\n";
+        emergencyQueue = std::move(criticalQueue);
+        criticalQueue.clear();
+        rebuildHeap(emergencyQueue);
     }
 }
 
@@ -138,8 +156,8 @@ void QueueManager::rebuildHeap(std::vector<Patient*>& heap) {
 }
 
 void QueueManager::updatePriorities(time_t currentTime) {
-    // Update VIP queue priorities
-    for (auto& patient : vipQueue) {
+    // Update Emergency queue priorities
+    for (auto& patient : emergencyQueue) {
         time_t waitTimeSec = currentTime - patient->getArrivalTime();
         patient->updateWaitTime(currentTime);
 
@@ -155,8 +173,8 @@ void QueueManager::updatePriorities(time_t currentTime) {
         patient->setPriorityScore(newScore);
     }
 
-    // Update Regular queue priorities
-    for (auto& patient : regularQueue) {
+    // Update Critical queue priorities
+    for (auto& patient : criticalQueue) {
         time_t waitTimeSec = currentTime - patient->getArrivalTime();
         patient->updateWaitTime(currentTime);
 
@@ -172,9 +190,27 @@ void QueueManager::updatePriorities(time_t currentTime) {
         patient->setPriorityScore(newScore);
     }
 
-    // Rebuild both heaps
-    rebuildHeap(vipQueue);
-    rebuildHeap(regularQueue);
+    // Update Checkup queue priorities
+    for (auto& patient : checkupQueue) {
+        time_t waitTimeSec = currentTime - patient->getArrivalTime();
+        patient->updateWaitTime(currentTime);
+
+        float newScore = engine->calculatePriorityScore(*patient, currentTime);
+
+        // Apply fairness boost if needed
+        int waitTimeMin = waitTimeSec / 60;
+        if (waitTimeMin > maxWaitTime) {
+            float extraWait = waitTimeMin - maxWaitTime;
+            newScore += extraWait * boostMultiplier;
+        }
+
+        patient->setPriorityScore(newScore);
+    }
+
+    // Rebuild all heaps
+    rebuildHeap(emergencyQueue);
+    rebuildHeap(criticalQueue);
+    rebuildHeap(checkupQueue);
 }
 
 void QueueManager::printQueue() {
@@ -182,12 +218,12 @@ void QueueManager::printQueue() {
 }
 
 void QueueManager::printAllQueues() {
-    std::cout << "\n=== VIP Queue ===\n";
-    if (vipQueue.empty()) {
+    std::cout << "\n=== Emergency Queue ===\n";
+    if (emergencyQueue.empty()) {
         std::cout << "Empty\n";
     }
     else {
-        for (const auto& patient : vipQueue) {
+        for (const auto& patient : emergencyQueue) {
             std::cout << "ID: " << patient->getId()
                 << " | Score: " << std::fixed << std::setprecision(2)
                 << patient->getPriorityScore()
@@ -195,12 +231,25 @@ void QueueManager::printAllQueues() {
         }
     }
 
-    std::cout << "\n=== Regular Queue ===\n";
-    if (regularQueue.empty()) {
+    std::cout << "\n=== Critical Queue ===\n";
+    if (criticalQueue.empty()) {
         std::cout << "Empty\n";
     }
     else {
-        for (const auto& patient : regularQueue) {
+        for (const auto& patient : criticalQueue) {
+            std::cout << "ID: " << patient->getId()
+                << " | Score: " << std::fixed << std::setprecision(2)
+                << patient->getPriorityScore()
+                << " | Type: " << patient->getServiceType() << "\n";
+        }
+    }
+
+    std::cout << "\n=== Checkup Queue ===\n";
+    if (checkupQueue.empty()) {
+        std::cout << "Empty\n";
+    }
+    else {
+        for (const auto& patient : checkupQueue) {
             std::cout << "ID: " << patient->getId()
                 << " | Score: " << std::fixed << std::setprecision(2)
                 << patient->getPriorityScore()
@@ -214,12 +263,12 @@ void QueueManager::setFairnessParams(int maxWait, float boost) {
     boostMultiplier = boost;
 }
 
-bool QueueManager::isVipQueueEmpty() {
-    return vipQueue.empty();
+bool QueueManager::isQueueEmpty(const std::string& serviceType) {
+    return getQueueByType(serviceType).empty();
 }
 
-bool QueueManager::isRegularQueueEmpty() {
-    return regularQueue.empty();
+int QueueManager::getQueueSize(const std::string& serviceType) {
+    return getQueueByType(serviceType).size();
 }
 
 void QueueManager::recordServiceCompletion(Patient* patient, time_t serviceTime) {
@@ -251,6 +300,28 @@ std::vector<Patient*> QueueManager::getServiceHistoryByPriority(float minPriorit
     return filtered;
 }
 
+std::vector<Patient*> QueueManager::getServiceHistoryByQueueType(const std::string& queueType) {
+    std::vector<Patient*> filtered;
+    for (auto patient : serviceHistory) {
+        if (patient->getServiceType() == queueType) {
+            filtered.push_back(patient);
+        }
+    }
+    return filtered;
+}
+
+std::vector<Patient*> QueueManager::getServiceHistoryByQueueType(const std::string& queueType, time_t startTime, time_t endTime) {
+    std::vector<Patient*> filtered;
+    for (auto patient : serviceHistory) {
+        time_t serviceTime = patient->getServiceTime();
+        if (patient->getServiceType() == queueType &&
+            serviceTime >= startTime && serviceTime <= endTime) {
+            filtered.push_back(patient);
+        }
+    }
+    return filtered;
+}
+
 void QueueManager::addPatientAtTime(Patient* patient, time_t timestamp) {
     // Set the arrival time to the specified timestamp
     patient->setArrivalTime(timestamp);
@@ -259,22 +330,16 @@ void QueueManager::addPatientAtTime(Patient* patient, time_t timestamp) {
     float score = engine->calculatePriorityScore(*patient, timestamp);
     patient->setPriorityScore(score);
 
-    // Determine which queue to add to
-    std::string queueType = determineQueueType(patient);
-
-    if (queueType == "VIP") {
-        vipQueue.push_back(patient);
-        heapifyUp(vipQueue, vipQueue.size() - 1);
-    }
-    else {
-        regularQueue.push_back(patient);
-        heapifyUp(regularQueue, regularQueue.size() - 1);
-    }
+    // Add to appropriate service type queue
+    std::vector<Patient*>& targetQueue = getQueueByType(patient->getServiceType());
+    targetQueue.push_back(patient);
+    heapifyUp(targetQueue, targetQueue.size() - 1);
 
     patientTable[patient->getId()] = patient;
 }
 
 std::string QueueManager::getQueueStatus() {
-    return "VIP: " + std::to_string(vipQueue.size()) +
-        ", Regular: " + std::to_string(regularQueue.size());
+    return "Emergency: " + std::to_string(emergencyQueue.size()) +
+        ", Critical: " + std::to_string(criticalQueue.size()) +
+        ", Checkup: " + std::to_string(checkupQueue.size());
 }

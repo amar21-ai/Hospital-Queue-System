@@ -56,13 +56,10 @@ void ReportManager::sortPatients(std::vector<Patient*>& patients, SortBy sortBy,
 std::string ReportManager::formatTime(time_t timestamp) {
     char buffer[100];
     struct tm timeinfo;
-    if (localtime_s(&timeinfo, &timestamp) != 0) {
-        return "Invalid Time";
-    }
+    localtime_s(&timeinfo, &timestamp);
     strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &timeinfo);
     return std::string(buffer);
 }
-
 
 std::string ReportManager::formatDuration(int minutes) {
     int hours = minutes / 60;
@@ -78,13 +75,13 @@ void ReportManager::generateTimeIntervalReport(time_t startTime, time_t endTime,
     std::vector<Patient*> allPatients = queueManager->getServiceHistory(startTime, endTime);
 
     if (allPatients.empty()) {
-        std::cout << "\n? No patients found in the specified time interval.\n";
+        std::cout << "\nNo patients found in the specified time interval.\n";
         return;
     }
 
     sortPatients(allPatients, sortBy, order);
 
-    std::string title = "?? Service Report - Time Interval (" +
+    std::string title = "Service Report - Time Interval (" +
         formatTime(startTime) + " to " + formatTime(endTime) + ")";
     displayPatients(allPatients, title);
 }
@@ -94,14 +91,45 @@ void ReportManager::generatePriorityReport(float minPriority, float maxPriority,
     std::vector<Patient*> allPatients = queueManager->getServiceHistoryByPriority(minPriority, maxPriority);
 
     if (allPatients.empty()) {
-        std::cout << "\n? No patients found in the specified priority range.\n";
+        std::cout << "\nNo patients found in the specified priority range.\n";
         return;
     }
 
     sortPatients(allPatients, sortBy, order);
 
-    std::string title = "?? Service Report - Priority Range (" +
+    std::string title = "Service Report - Priority Range (" +
         std::to_string(minPriority) + " to " + std::to_string(maxPriority) + ")";
+    displayPatients(allPatients, title);
+}
+
+void ReportManager::generateQueueTypeReport(const std::string& queueType,
+    SortBy sortBy, SortOrder order) {
+    std::vector<Patient*> allPatients = queueManager->getServiceHistoryByQueueType(queueType);
+
+    if (allPatients.empty()) {
+        std::cout << "\nNo patients found for the specified queue type.\n";
+        return;
+    }
+
+    sortPatients(allPatients, sortBy, order);
+
+    std::string title = "Service Report - Queue Type (" + queueType + ")";
+    displayPatients(allPatients, title);
+}
+
+void ReportManager::generateQueueTypeTimeReport(const std::string& queueType,
+    time_t startTime, time_t endTime, SortBy sortBy, SortOrder order) {
+    std::vector<Patient*> allPatients = queueManager->getServiceHistoryByQueueType(queueType, startTime, endTime);
+
+    if (allPatients.empty()) {
+        std::cout << "\nNo patients found for the specified queue type and time interval.\n";
+        return;
+    }
+
+    sortPatients(allPatients, sortBy, order);
+
+    std::string title = "Service Report - " + queueType + " (" +
+        formatTime(startTime) + " to " + formatTime(endTime) + ")";
     displayPatients(allPatients, title);
 }
 
@@ -112,12 +140,12 @@ void ReportManager::generateFullReport(SortBy sortBy, SortOrder order) {
     std::vector<Patient*> allPatients = queueManager->getServiceHistory(dayAgo, now);
 
     if (allPatients.empty()) {
-        std::cout << "\n? No patients served in the last 24 hours.\n";
+        std::cout << "\nNo patients served in the last 24 hours.\n";
         return;
     }
 
     sortPatients(allPatients, sortBy, order);
-    displayPatients(allPatients, "?? Full Service Report (Last 24 Hours)");
+    displayPatients(allPatients, "Full Service Report (Last 24 Hours)");
 }
 
 void ReportManager::displayPatients(const std::vector<Patient*>& patients, const std::string& title) {
@@ -161,21 +189,23 @@ void ReportManager::displayPatients(const std::vector<Patient*>& patients, const
 
 void ReportManager::showReportMenu() {
     while (true) {
-        std::cout << "\n?? Report Generation Menu\n";
+        std::cout << "\nReport Generation Menu\n";
         std::cout << "=========================\n";
         std::cout << "1. Time Interval Report\n";
         std::cout << "2. Priority Range Report\n";
-        std::cout << "3. Full Report (Last 24h)\n";
-        std::cout << "4. Show Statistics\n";
-        std::cout << "5. Return to Main Menu\n";
-        std::cout << "Choice (1-5): ";
+        std::cout << "3. Queue Type Report\n";
+        std::cout << "4. Queue Type + Time Report\n";
+        std::cout << "5. Full Report (Last 24h)\n";
+        std::cout << "6. Show Statistics\n";
+        std::cout << "7. Return to Main Menu\n";
+        std::cout << "Choice (1-7): ";
 
-        int choice = getIntInput(1, 5);
-        if (choice == 5) break;
+        int choice = getIntInput(1, 7);
+        if (choice == 7) break;
 
         switch (choice) {
         case 1: {
-            std::cout << "\n?? Time Interval Report\n";
+            std::cout << "\nTime Interval Report\n";
             std::cout << "Enter start time:\n";
             time_t startTime = getTimeInput();
             std::cout << "Enter end time:\n";
@@ -195,7 +225,7 @@ void ReportManager::showReportMenu() {
             break;
         }
         case 2: {
-            std::cout << "\n?? Priority Range Report\n";
+            std::cout << "\nPriority Range Report\n";
             std::cout << "Enter minimum priority (0-100): ";
             float minPriority = getFloatInput(0, 100);
             std::cout << "Enter maximum priority (" << minPriority << "-100): ";
@@ -215,6 +245,55 @@ void ReportManager::showReportMenu() {
             break;
         }
         case 3: {
+            std::cout << "\nQueue Type Report\n";
+            std::cout << "Select queue type:\n";
+            std::cout << "1. Emergency\n2. Critical\n3. Checkup\n";
+            std::cout << "Choice (1-3): ";
+            int queueChoice = getIntInput(1, 3);
+            std::string queueTypes[] = { "Emergency", "Critical", "Checkup" };
+            std::string selectedQueue = queueTypes[queueChoice - 1];
+
+            std::cout << "\nSort by:\n1. Entry Time\n2. Waiting Time\n3. Priority Score\n";
+            std::cout << "Choice (1-3): ";
+            int sortChoice = getIntInput(1, 3);
+            SortBy sortBy = static_cast<SortBy>(sortChoice - 1);
+
+            std::cout << "\nSort order:\n1. Ascending\n2. Descending\n";
+            std::cout << "Choice (1-2): ";
+            int orderChoice = getIntInput(1, 2);
+            SortOrder order = (orderChoice == 1) ? SortOrder::ASCENDING : SortOrder::DESCENDING;
+
+            generateQueueTypeReport(selectedQueue, sortBy, order);
+            break;
+        }
+        case 4: {
+            std::cout << "\nQueue Type + Time Report\n";
+            std::cout << "Select queue type:\n";
+            std::cout << "1. Emergency\n2. Critical\n3. Checkup\n";
+            std::cout << "Choice (1-3): ";
+            int queueChoice = getIntInput(1, 3);
+            std::string queueTypes[] = { "Emergency", "Critical", "Checkup" };
+            std::string selectedQueue = queueTypes[queueChoice - 1];
+
+            std::cout << "\nEnter start time:\n";
+            time_t startTime = getTimeInput();
+            std::cout << "Enter end time:\n";
+            time_t endTime = getTimeInput();
+
+            std::cout << "\nSort by:\n1. Entry Time\n2. Waiting Time\n3. Priority Score\n";
+            std::cout << "Choice (1-3): ";
+            int sortChoice = getIntInput(1, 3);
+            SortBy sortBy = static_cast<SortBy>(sortChoice - 1);
+
+            std::cout << "\nSort order:\n1. Ascending\n2. Descending\n";
+            std::cout << "Choice (1-2): ";
+            int orderChoice = getIntInput(1, 2);
+            SortOrder order = (orderChoice == 1) ? SortOrder::ASCENDING : SortOrder::DESCENDING;
+
+            generateQueueTypeTimeReport(selectedQueue, startTime, endTime, sortBy, order);
+            break;
+        }
+        case 5: {
             std::cout << "\nSort by:\n1. Entry Time\n2. Waiting Time\n3. Priority Score\n";
             std::cout << "Choice (1-3): ";
             int sortChoice = getIntInput(1, 3);
@@ -228,7 +307,7 @@ void ReportManager::showReportMenu() {
             generateFullReport(sortBy, order);
             break;
         }
-        case 4:
+        case 6:
             showStatistics();
             break;
         }
@@ -236,7 +315,7 @@ void ReportManager::showReportMenu() {
 }
 
 void ReportManager::showStatistics() {
-    std::cout << "\n?? System Statistics\n";
+    std::cout << "\nSystem Statistics\n";
     std::cout << "===================\n";
 
     int totalServed = getTotalPatientsServed();

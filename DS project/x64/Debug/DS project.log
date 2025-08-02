@@ -1,3 +1,1 @@
-﻿  ReportManager.cpp
-C:\Users\youss\source\repos\Hospital-Queue-System\ReportManager.cpp(289,62): warning C4267: 'return': conversion from 'size_t' to 'int', possible loss of data
-  DS project.vcxproj -> C:\Users\youss\Source\Repos\Hospital-Queue-System\x64\Debug\DS project.exe
+﻿  DS project.vcxproj -> C:\Users\youss\Source\Repos\Hospital-Queue-System\x64\Debug\DS project.exe

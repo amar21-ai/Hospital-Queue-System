@@ -12,9 +12,10 @@ class QueueManager {
 private:
     PriorityEngine* engine;
 
-    // Multiple queues support
-    std::vector<Patient*> vipQueue;
-    std::vector<Patient*> regularQueue;
+    // Service type-based queues
+    std::vector<Patient*> emergencyQueue;
+    std::vector<Patient*> criticalQueue;
+    std::vector<Patient*> checkupQueue;
     std::unordered_map<int, Patient*> patientTable;
 
     // Fairness parameters
@@ -29,8 +30,8 @@ private:
     void heapifyDown(std::vector<Patient*>& heap, int index);
     void rebuildHeap(std::vector<Patient*>& heap);
 
-    // Determine which queue a patient should go to
-    std::string determineQueueType(Patient* patient);
+    // Get queue by service type
+    std::vector<Patient*>& getQueueByType(const std::string& serviceType);
 
 public:
     QueueManager(PriorityEngine* engine);
@@ -41,10 +42,11 @@ public:
     Patient* serveNextPatient();
     void updatePriorities(time_t currentTime);
 
-    // Multiple queue operations
+    // Service type queue operations
     void mergeQueues();
-    bool isVipQueueEmpty();
-    bool isRegularQueueEmpty();
+    bool isQueueEmpty(const std::string& serviceType);
+    int getQueueSize(const std::string& serviceType);
+    std::string getNextServiceType(); // Determines priority order for serving
 
     // Display functions
     void printQueue();
@@ -53,9 +55,11 @@ public:
     // Configuration
     void setFairnessParams(int maxWait, float boost);
 
-    // Reporting
+    // Reporting with queue type filtering
     std::vector<Patient*> getServiceHistory(time_t startTime, time_t endTime);
     std::vector<Patient*> getServiceHistoryByPriority(float minPriority, float maxPriority);
+    std::vector<Patient*> getServiceHistoryByQueueType(const std::string& queueType);
+    std::vector<Patient*> getServiceHistoryByQueueType(const std::string& queueType, time_t startTime, time_t endTime);
     void recordServiceCompletion(Patient* patient, time_t serviceTime);
 
     // Simulation support

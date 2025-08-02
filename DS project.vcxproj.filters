@@ -30,6 +30,12 @@
     <ClInclude Include="QueueManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SimulationManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ReportManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Patient.cpp">
@@ -50,5 +56,14 @@
     <ClCompile Include="QueueManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SimulationManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ReportManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="simulation_data.json" />
   </ItemGroup>
 </Project>

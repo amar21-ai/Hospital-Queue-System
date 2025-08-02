@@ -3,11 +3,12 @@
 #include "QueueManager.h"
 #include "AdminConsole.h"
 #include "AdminUI.h"
+#include "SimulationManager.h"
+#include "ReportManager.h"
 #include <iostream>
 #include <ctime>
 #include <thread>
 #include <chrono>
-
 using namespace std;
 
 // Helper function for safe integer input
@@ -57,11 +58,72 @@ void addPatient(QueueManager& queue) {
         << ", Urgency: " << urgency << ")\n";
 }
 
+void runSimulation(QueueManager& queue) {
+    SimulationManager simManager(&queue);
+
+    cout << "\n🎬 Simulation Options:\n";
+    cout << "1. Load from JSON file\n";
+    cout << "2. Quick demo simulation\n";
+    cout << "Choice (1-2): ";
+
+    int choice = getIntInput(1, 2);
+
+    if (choice == 1) {
+        cout << "Enter JSON filename (default: simulation_data.json): ";
+        string filename;
+        cin.ignore();
+        getline(cin, filename);
+        if (filename.empty()) filename = "simulation_data.json";
+
+        if (simManager.loadSimulation(filename)) {
+            simManager.runSimulation();
+        }
+        else {
+            cout << "❌ Failed to load simulation file.\n";
+        }
+    }
+    else {
+        // Quick demo - add some events manually
+        simManager.addEvent(1, 201, 5, "Emergency");
+        simManager.addEvent(3, 202, 3, "Critical");
+        simManager.addEvent(5, 203, 2, "Checkup");
+        simManager.addEvent(7, 204, 4, "Emergency");
+        simManager.addEvent(10, 205, 1, "Checkup");
+
+        cout << "\n🚀 Running quick demo simulation...\n";
+        simManager.runSimulation();
+    }
+}
+
+void servePatients(QueueManager& queue) {
+    cout << "\n🔄 Serve Patients Mode\n";
+    cout << "How many patients to serve? (1-10): ";
+    int count = getIntInput(1, 10);
+
+    for (int i = 0; i < count; i++) {
+        Patient* p = queue.serveNextPatient();
+        if (p) {
+            cout << "🩺 Served Patient " << p->getId()
+                << " (Final Score: " << p->getPriorityScore()
+                << ", Wait Time: " << p->getTotalWaitTimeMinutes() << " min)\n";
+            delete p;
+        }
+        else {
+            cout << "❌ No more patients in queue!\n";
+            break;
+        }
+
+        // Small delay between servings
+        this_thread::sleep_for(chrono::milliseconds(500));
+    }
+}
+
 void runHospitalSystem() {
     PriorityEngine engine;
     QueueManager queue(&engine);
     AdminConsole console(&engine, &queue);
     AdminUI adminUI(&console);
+    ReportManager reportManager(&queue);
 
     // Initial configuration
     console.setWeights(0.5f, 0.3f, 0.2f);
@@ -70,13 +132,23 @@ void runHospitalSystem() {
     console.setServiceTypeScore("Checkup", 5);
     console.setFairnessParams(25, 0.5f);
 
-    while (true) {
-        cout << "\n🏠 Smart Hospital Queue System\n"
-            << "1. Add Patient\n2. Serve Next\n3. View Queue\n"
-            << "4. Admin Console\n5. Simulate Time\n6. Exit\n"
-            << "Choice (1-6): ";
+    cout << "\n🏥 Welcome to Smart Hospital Queue Management System\n";
+    cout << "==================================================\n";
 
-        switch (getIntInput(1, 6)) {
+    while (true) {
+        cout << "\n🏠 Main Menu\n"
+            << "1. Add Patient\n"
+            << "2. Serve Next Patient\n"
+            << "3. Serve Multiple Patients\n"
+            << "4. View All Queues\n"
+            << "5. Admin Console\n"
+            << "6. Run Simulation\n"
+            << "7. Generate Reports\n"
+            << "8. Simulate Time Passing\n"
+            << "9. Exit\n"
+            << "Choice (1-9): ";
+
+        switch (getIntInput(1, 9)) {
         case 1:
             addPatient(queue);
             break;
@@ -85,32 +157,45 @@ void runHospitalSystem() {
             Patient* p = queue.serveNextPatient();
             if (p) {
                 cout << "\n🩺 Served Patient " << p->getId()
-                    << " (Final Score: " << p->getPriorityScore() << ")\n";
+                    << " (Final Score: " << p->getPriorityScore()
+                    << ", Wait Time: " << p->getTotalWaitTimeMinutes() << " min)\n";
                 delete p;
             }
             else {
-                cout << "\n❌ Queue is empty!\n";
+                cout << "\n❌ No patients in queue!\n";
             }
             break;
         }
 
         case 3:
-            cout << "\n📋 Current Queue:\n";
-            queue.printQueue();
+            servePatients(queue);
             break;
 
         case 4:
-            adminUI.showMainMenu();
+            cout << "\n📋 Current Queue Status:\n";
+            queue.printAllQueues();
             break;
 
         case 5:
-            cout << "\n⏱️ Enter minutes to simulate (1-60): ";
-            simulateTimePassing(queue, getIntInput(1, 60));
-            cout << "Priority scores updated!\n";
+            adminUI.showMainMenu();
             break;
 
         case 6:
-            cout << "\n👋 System shutdown.\n";
+            runSimulation(queue);
+            break;
+
+        case 7:
+            reportManager.showReportMenu();
+            break;
+
+        case 8:
+            cout << "\n⏱️ Enter minutes to simulate (1-60): ";
+            simulateTimePassing(queue, getIntInput(1, 60));
+            cout << "✅ Priority scores updated!\n";
+            break;
+
+        case 9:
+            cout << "\n👋 System shutdown. Thank you for using Smart Hospital Queue Management!\n";
             return;
         }
     }

@@ -24,6 +24,8 @@
     <ClInclude Include="Patient.h" />
     <ClInclude Include="PriorityEngine.h" />
     <ClInclude Include="QueueManager.h" />
+    <ClInclude Include="ReportManager.h" />
+    <ClInclude Include="SimulationManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AdminConsole.cpp" />
@@ -31,7 +33,12 @@
     <ClCompile Include="Patient.cpp" />
     <ClCompile Include="PriorityEngine.cpp" />
     <ClCompile Include="QueueManager.cpp" />
+    <ClCompile Include="ReportManager.cpp" />
+    <ClCompile Include="SimulationManager.cpp" />
     <ClCompile Include="tempMain.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="simulation_data.json" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

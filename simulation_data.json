@@ -1,0 +1,184 @@
+{
+  "simulation_events": [
+    {
+      "timestamp": 1,
+      "patientId": 101,
+      "urgency": 5,
+      "serviceType": "Emergency"
+    },
+    {
+      "timestamp": 2,
+      "patientId": 102,
+      "urgency": 3,
+      "serviceType": "Critical"
+    },
+    {
+      "timestamp": 3,
+      "patientId": 103,
+      "urgency": 2,
+      "serviceType": "Checkup"
+    },
+    {
+      "timestamp": 5,
+      "patientId": 104,
+      "urgency": 4,
+      "serviceType": "Emergency"
+    },
+    {
+      "timestamp": 7,
+      "patientId": 105,
+      "urgency": 1,
+      "serviceType": "Checkup"
+    },
+    {
+      "timestamp": 8,
+      "patientId": 106,
+      "urgency": 5,
+      "serviceType": "Emergency"
+    },
+    {
+      "timestamp": 10,
+      "patientId": 107,
+      "urgency": 3,
+      "serviceType": "Critical"
+    },
+    {
+      "timestamp": 12,
+      "patientId": 108,
+      "urgency": 2,
+      "serviceType": "Checkup"
+    },
+    {
+      "timestamp": 15,
+      "patientId": 109,
+      "urgency": 4,
+      "serviceType": "Critical"
+    },
+    {
+      "timestamp": 16,
+      "patientId": 110,
+      "urgency": 5,
+      "serviceType": "Emergency"
+    },
+    {
+      "timestamp": 18,
+      "patientId": 111,
+      "urgency": 2,
+      "serviceType": "Checkup"
+    },
+    {
+      "timestamp": 20,
+      "patientId": 112,
+      "urgency": 3,
+      "serviceType": "Critical"
+    },
+    {
+      "timestamp": 22,
+      "patientId": 113,
+      "urgency": 1,
+      "serviceType": "Checkup"
+    },
+    {
+      "timestamp": 25,
+      "patientId": 114,
+      "urgency": 5,
+      "serviceType": "Emergency"
+    },
+    {
+      "timestamp": 27,
+      "patientId": 115,
+      "urgency": 4,
+      "serviceType": "Critical"
+    },
+    {
+      "timestamp": 30,
+      "patientId": 116,
+      "urgency": 2,
+      "serviceType": "Checkup"
+    },
+    {
+      "timestamp": 32,
+      "patientId": 117,
+      "urgency": 3,
+      "serviceType": "Critical"
+    },
+    {
+      "timestamp": 35,
+      "patientId": 118,
+      "urgency": 5,
+      "serviceType": "Emergency"
+    },
+    {
+      "timestamp": 37,
+      "patientId": 119,
+      "urgency": 1,
+      "serviceType": "Checkup"
+    },
+    {
+      "timestamp": 40,
+      "patientId": 120,
+      "urgency": 4,
+      "serviceType": "Critical"
+    },
+    {
+      "timestamp": 42,
+      "patientId": 121,
+      "urgency": 2,
+      "serviceType": "Checkup"
+    },
+    {
+      "timestamp": 45,
+      "patientId": 122,
+      "urgency": 5,
+      "serviceType": "Emergency"
+    },
+    {
+      "timestamp": 47,
+      "patientId": 123,
+      "urgency": 3,
+      "serviceType": "Critical"
+    },
+    {
+      "timestamp": 50,
+      "patientId": 124,
+      "urgency": 1,
+      "serviceType": "Checkup"
+    },
+    {
+      "timestamp": 52,
+      "patientId": 125,
+      "urgency": 4,
+      "serviceType": "Critical"
+    },
+    {
+      "timestamp": 55,
+      "patientId": 126,
+      "urgency": 5,
+      "serviceType": "Emergency"
+    },
+    {
+      "timestamp": 57,
+      "patientId": 127,
+      "urgency": 2,
+      "serviceType": "Checkup"
+    },
+    {
+      "timestamp": 58,
+      "patientId": 128,
+      "urgency": 3,
+      "serviceType": "Critical"
+    },
+    {
+      "timestamp": 59,
+      "patientId": 129,
+      "urgency": 4,
+      "serviceType": "Emergency"
+    },
+    {
+      "timestamp": 60,
+      "patientId": 130,
+      "urgency": 1,
+      "serviceType": "Checkup"
+    }
+  ]
+}

@@ -1,6 +1,8 @@
-D:\DS project\AdminConsole.cpp;D:\DS project\DS project\x64\Debug\AdminConsole.obj
-D:\DS project\AdminUI.cpp;D:\DS project\DS project\x64\Debug\AdminUI.obj
-D:\DS project\Patient.cpp;D:\DS project\DS project\x64\Debug\Patient.obj
-D:\DS project\PriorityEngine.cpp;D:\DS project\DS project\x64\Debug\PriorityEngine.obj
-D:\DS project\QueueManager.cpp;D:\DS project\DS project\x64\Debug\QueueManager.obj
-D:\DS project\tempMain.cpp;D:\DS project\DS project\x64\Debug\tempMain.obj
+C:\Users\youss\source\repos\Hospital-Queue-System\AdminConsole.cpp;C:\Users\youss\source\repos\Hospital-Queue-System\DS project\x64\Debug\AdminConsole.obj
+C:\Users\youss\source\repos\Hospital-Queue-System\AdminUI.cpp;C:\Users\youss\source\repos\Hospital-Queue-System\DS project\x64\Debug\AdminUI.obj
+C:\Users\youss\source\repos\Hospital-Queue-System\Patient.cpp;C:\Users\youss\source\repos\Hospital-Queue-System\DS project\x64\Debug\Patient.obj
+C:\Users\youss\source\repos\Hospital-Queue-System\PriorityEngine.cpp;C:\Users\youss\source\repos\Hospital-Queue-System\DS project\x64\Debug\PriorityEngine.obj
+C:\Users\youss\source\repos\Hospital-Queue-System\QueueManager.cpp;C:\Users\youss\source\repos\Hospital-Queue-System\DS project\x64\Debug\QueueManager.obj
+C:\Users\youss\source\repos\Hospital-Queue-System\ReportManager.cpp;C:\Users\youss\source\repos\Hospital-Queue-System\DS project\x64\Debug\ReportManager.obj
+C:\Users\youss\source\repos\Hospital-Queue-System\SimulationManager.cpp;C:\Users\youss\source\repos\Hospital-Queue-System\DS project\x64\Debug\SimulationManager.obj
+C:\Users\youss\source\repos\Hospital-Queue-System\tempMain.cpp;C:\Users\youss\source\repos\Hospital-Queue-System\DS project\x64\Debug\tempMain.obj

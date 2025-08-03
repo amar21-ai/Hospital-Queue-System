@@ -82,7 +82,6 @@ void runSimulation(QueueManager& queue) {
         }
     }
     else {
-        // Quick demo - add some events manually
         simManager.addEvent(1, 201, 5, "Emergency");
         simManager.addEvent(3, 202, 3, "Critical");
         simManager.addEvent(5, 203, 2, "Checkup");
@@ -145,10 +144,10 @@ void runHospitalSystem() {
             << "8. Simulate Time Passing\n"
             << "9. Exit\n"
             << "10. Show Frequent Visitors\n"
-            << "11. Emergency Serve Patient\n" // New option
+            << "11. Emergency Serve Patient\n"
             << "Choice (1-11): ";
 
-        switch (getIntInput(1, 11)) { // Update range
+        switch (getIntInput(1, 11)) { 
         case 1:
             addPatient(queue);
             break;

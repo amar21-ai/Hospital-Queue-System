@@ -19,7 +19,6 @@ QueueManager::~QueueManager() {
     for (auto patient : checkupQueue) {
         delete patient;
     }
-    // Clean up service history
     for (auto patient : serviceHistory) {
         delete patient;
     }
@@ -38,16 +37,13 @@ std::vector<Patient*>& QueueManager::getQueueByType(const std::string& serviceTy
 }
 
 void QueueManager::addPatient(Patient* patient) {
-    // Check if patient already exists in any queue
     auto existingPatient = patientTable.find(patient->getId());
     if (existingPatient != patientTable.end()) {
-        // Update existing patient's data
         time_t now = time(0);
         existingPatient->second->updateWaitTime(now);
         float score = engine->calculatePriorityScore(*(existingPatient->second), now, this);
         existingPatient->second->setPriorityScore(score);
         
-        // Remove and re-add to maintain heap property
         std::vector<Patient*>& targetQueue = getQueueByType(existingPatient->second->getServiceType());
         auto it = std::find(targetQueue.begin(), targetQueue.end(), existingPatient->second);
         if (it != targetQueue.end()) {
@@ -59,11 +55,8 @@ void QueueManager::addPatient(Patient* patient) {
         std::cout << "Updated existing Patient " << patient->getId() 
                   << " in " << patient->getServiceType()
                   << " queue (New Score: " << score << ")\n";
-        
-        // Clean up the new duplicate patient object
         delete patient;
     } else {
-        // Add new patient as before
         time_t now = time(0);
         patient->updateWaitTime(now);
         float score = engine->calculatePriorityScore(*patient, now, this);
@@ -79,12 +72,10 @@ void QueueManager::addPatient(Patient* patient) {
         patientTable[patient->getId()] = patient;
     }
 
-    // Update visit count
     incrementVisitCount(patient->getId());
 }
 
 
-// Patient visit frequency methods
 void QueueManager::incrementVisitCount(int patientId) {
     patientVisitCount[patientId]++;
 }
@@ -360,7 +351,6 @@ std::vector<Patient*> QueueManager::getServiceHistoryByQueueType(const std::stri
 void QueueManager::addPatientAtTime(Patient* patient, time_t timestamp) {
     patient->setArrivalTime(timestamp);
 
-    // Calculate priority score based on the timestamp
     float score = engine->calculatePriorityScore(*patient, timestamp, this);
     patient->setPriorityScore(score);
 
@@ -378,19 +368,15 @@ std::string QueueManager::getQueueStatus() {
 }
 
 Patient* QueueManager::servePatientById(int patientId) {
-    // Search all queues for the patient
     std::vector<std::vector<Patient*>*> queues = { &emergencyQueue, &criticalQueue, &checkupQueue };
     for (auto queue : queues) {
         auto it = std::find_if(queue->begin(), queue->end(),
             [patientId](Patient* p) { return p->getId() == patientId; });
         if (it != queue->end()) {
             Patient* patient = *it;
-            // Remove from queue
             queue->erase(it);
-            rebuildHeap(*queue); // Maintain heap property
-            // Remove from patientTable
+            rebuildHeap(*queue); 
             patientTable.erase(patientId);
-            // Record service completion
             recordServiceCompletion(patient, time(0));
             std::cout << "Emergency! Serving Patient " << patientId << " immediately.\n";
             return patient;

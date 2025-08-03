@@ -401,7 +401,7 @@ float ReportManager::getFloatInput(float min, float max) {
 
 time_t ReportManager::getTimeInput() {
     std::cout << "Enter hours ago (0-168): ";
-    int hoursAgo = getIntInput(0, 168); // Up to 1 week ago
+    int hoursAgo = getIntInput(0, 168); 
 
     time_t now = time(0);
     return now - (hoursAgo * 60 * 60);

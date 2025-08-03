@@ -11,14 +11,13 @@ private:
     int urgency;
     string serviceType;
     time_t arrivalTime;
-    time_t serviceTime;  // When the patient was served
+    time_t serviceTime;  
     float priorityScore;
 
 public:
     Patient(int id, int urgency, string serviceType);
-    Patient(const Patient& other); // Copy constructor for history
+    Patient(const Patient& other);
 
-    // Getters
     int getId();
     int getUrgency();
     string getServiceType();
@@ -26,15 +25,13 @@ public:
     time_t getServiceTime();
     float getPriorityScore();
 
-    // Setters
     void setPriorityScore(float score);
     void setArrivalTime(time_t time);
     void setServiceTime(time_t time);
     void updateWaitTime(time_t currentTime);
 
-    // Utility functions
     int getWaitTimeMinutes(time_t currentTime);
-    int getTotalWaitTimeMinutes(); // From arrival to service
+    int getTotalWaitTimeMinutes(); 
 };
 
 #endif

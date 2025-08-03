@@ -29,7 +29,7 @@ float PriorityEngine::calculatePriorityScore(Patient& patient, time_t currentTim
     if (queueManager) {
         int visits = queueManager->getVisitCount(patient.getId());
         if (visits >= 25) {
-            visitBonus = 2.0f; // Highest bonus
+            visitBonus = 2.0f; 
         } else if (visits >= 10) {
             visitBonus = 1.0f;
         } else if (visits >= 5) {

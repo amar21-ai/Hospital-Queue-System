@@ -22,7 +22,6 @@ class ReportManager {
 private:
     QueueManager* queueManager;
 
-    // Helper functions
     std::vector<Patient*> filterByTimeInterval(const std::vector<Patient*>& patients,
         time_t startTime, time_t endTime);
     std::vector<Patient*> filterByPriority(const std::vector<Patient*>& patients,
@@ -31,7 +30,6 @@ private:
     std::string formatTime(time_t timestamp);
     std::string formatDuration(int minutes);
 
-    // Helper for user input
     int getIntInput(int min, int max);
     float getFloatInput(float min, float max);
     time_t getTimeInput();
@@ -40,7 +38,6 @@ private:
 public:
     ReportManager(QueueManager* qm);
 
-    // Generate reports
     void generateTimeIntervalReport(time_t startTime, time_t endTime,
         SortBy sortBy = SortBy::ENTRY_TIME,
         SortOrder order = SortOrder::ASCENDING);
@@ -56,10 +53,8 @@ public:
     void generateFullReport(SortBy sortBy = SortBy::WAITING_TIME,
         SortOrder order = SortOrder::DESCENDING);
 
-    // Interactive report generation
     void showReportMenu();
 
-    // Statistics
     void showStatistics();
     double getAverageWaitTime();
     int getTotalPatientsServed();

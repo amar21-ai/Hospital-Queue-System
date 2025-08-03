@@ -7,7 +7,7 @@ private:
 
     int getIntInput(int min, int max);
     void showServiceTypes();
-    void handleInput(int choice);  // Declaration moved here
+    void handleInput(int choice); 
 
 public:
     AdminUI(AdminConsole* console);

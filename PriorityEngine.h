@@ -4,8 +4,7 @@
 
 using namespace std;
 
-class QueueManager; // Forward declaration
-
+class QueueManager; 
 class PriorityEngine {
 private:
     float urgencyWeight;
@@ -17,6 +16,5 @@ public:
     PriorityEngine();
     void setWeights(float urgency, float waitTime, float serviceType);
     void setServiceTypeScore(string type, float score);
-    // New: Accept QueueManager for visit count
     float calculatePriorityScore(Patient& patient, time_t currentTime, const QueueManager* queueManager = nullptr);
 };

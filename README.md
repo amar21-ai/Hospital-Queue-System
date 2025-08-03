@@ -169,14 +169,6 @@ Patient ID,Service Type,Urgency,Priority Score,Wait Time (min),Visit Count,Statu
 201,Emergency,5,12.50,5,1,Served,2024-01-15T10:30:00Z,0
 ```
 
-## 🎨 Screenshots
-
-### Web GUI Dashboard
-![Dashboard](https://via.placeholder.com/800x400/667eea/ffffff?text=Modern+Queue+Management+Dashboard)
-
-### Advanced Reporting Interface
-![Reports](https://via.placeholder.com/800x400/38a169/ffffff?text=Comprehensive+Reporting+System)
-
 ### C++ Console Interface
 ```
 🏥 Welcome to Smart Hospital Queue Management System
@@ -242,14 +234,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Healthcare professionals who provided domain expertise
 - Open source community for tools and libraries
 - Beta testers from various medical facilities
-
-## 📞 Support
-
-- **Documentation**: [Wiki](https://github.com/amar21-ai/smart-hospital-queue/wiki)
-- **Issues**: [GitHub Issues](https://github.com/amar21-ai/smart-hospital-queue/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/amar21-ai/smart-hospital-queue/discussions)
-
----
 
 ⭐ **Star this repository if you find it helpful!**
 

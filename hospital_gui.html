@@ -458,20 +458,27 @@
                 </div>
                 <div class="form-group">
                     <label>JSON Format Example:</label>
-                    <textarea readonly style="height: 120px; font-family: monospace; font-size: 12px;">[
+                    <textarea readonly style="height: 120px; font-family: monospace; font-size: 12px;">Format 1 - Direct Array:
+[
   {
     "time": 1,
     "patientId": 201,
     "urgency": 5,
     "serviceType": "Emergency"
-  },
-  {
-    "time": 3,
-    "patientId": 202,
-    "urgency": 3,
-    "serviceType": "Critical"
   }
-]</textarea>
+]
+
+Format 2 - Wrapped Object:
+{
+  "simulation_events": [
+    {
+      "timestamp": 1,
+      "patientId": 201,
+      "urgency": 5,
+      "serviceType": "Emergency"
+    }
+  ]
+}</textarea>
                 </div>
                 <button class="btn btn-success" onclick="runJsonSimulation()" id="runJsonBtn" disabled>
                     ▶️ Run JSON Simulation
@@ -481,8 +488,10 @@
     </div>
 
     <script>
-        // System state
-        let patients = [];
+        // System state - Separate queues for each service type
+        let emergencyQueue = [];
+        let criticalQueue = [];
+        let checkupQueue = [];
         let servedPatients = [];
         let currentTime = Date.now();
         let patientIdCounter = 1;
@@ -502,11 +511,25 @@
             }
 
             getVisitCount() {
-                return servedPatients.filter(p => p.id === this.id).length + 1;
+                // Count previous visits for this patient ID
+                const previousVisits = servedPatients.filter(p => p.id === this.id).length;
+                // Add current patients in all queues with same ID
+                const currentInQueues = [...emergencyQueue, ...criticalQueue, ...checkupQueue]
+                    .filter(p => p.id === this.id).length;
+                return previousVisits + currentInQueues + 1; // +1 for this current visit
             }
 
             getWaitTimeMinutes() {
                 return Math.floor((Date.now() - this.arrivalTime) / (1000 * 60));
+            }
+
+            getFrequentVisitorBonus() {
+                // Frequent visitor bonus: +0.5 for every 5 visits above threshold
+                if (this.visitCount >= 5) {
+                    const bonusMultiplier = Math.floor(this.visitCount / 5) * 0.5;
+                    return bonusMultiplier;
+                }
+                return 0;
             }
 
             getPriorityScore() {
@@ -514,10 +537,14 @@
                 const urgencyScore = this.urgency * 2;
                 const waitScore = Math.min(waitTime * 0.5, 20);
                 const serviceScore = serviceScores[this.serviceType] || 5;
+                const frequentVisitorBonus = this.getFrequentVisitorBonus();
                 
-                return (urgencyScore * weights.urgency + 
-                       waitScore * weights.waitTime + 
-                       serviceScore * weights.service).toFixed(2);
+                const baseScore = (urgencyScore * weights.urgency + 
+                                 waitScore * weights.waitTime + 
+                                 serviceScore * weights.service);
+                
+                const finalScore = baseScore + frequentVisitorBonus;
+                return finalScore.toFixed(2);
             }
         }
 
@@ -531,16 +558,29 @@
                 return;
             }
 
-            // Check if patient already exists
-            if (patients.find(p => p.id === id)) {
-                alert('Patient with this ID already exists in queue!');
+            // Check if patient already exists in any queue
+            const allPatients = [...emergencyQueue, ...criticalQueue, ...checkupQueue];
+            if (allPatients.find(p => p.id === id)) {
+                alert('Patient with this ID already exists in a queue!');
                 return;
             }
 
             const patient = new Patient(id, urgency, serviceType);
-            patients.push(patient);
             
-            logActivity(`➕ Patient ${id} added (${serviceType}, Urgency: ${urgency})`);
+            // Add to appropriate queue based on service type
+            switch(serviceType) {
+                case 'Emergency':
+                    emergencyQueue.push(patient);
+                    break;
+                case 'Critical':
+                    criticalQueue.push(patient);
+                    break;
+                case 'Checkup':
+                    checkupQueue.push(patient);
+                    break;
+            }
+            
+            logActivity(`➕ Patient ${id} added to ${serviceType} queue (Urgency: ${urgency})`);
             updateQueueDisplay();
             updateStats();
             
@@ -549,18 +589,40 @@
         }
 
         function serveNextPatient() {
-            if (patients.length === 0) {
-                alert('No patients in queue!');
+            // Check all queues and find the highest priority patient
+            const allPatients = [
+                ...emergencyQueue.map(p => ({patient: p, queue: 'emergency'})),
+                ...criticalQueue.map(p => ({patient: p, queue: 'critical'})),
+                ...checkupQueue.map(p => ({patient: p, queue: 'checkup'}))
+            ];
+
+            if (allPatients.length === 0) {
+                alert('No patients in any queue!');
                 return;
             }
 
             // Sort by priority score (highest first)
-            patients.sort((a, b) => b.getPriorityScore() - a.getPriorityScore());
+            allPatients.sort((a, b) => b.patient.getPriorityScore() - a.patient.getPriorityScore());
             
-            const patient = patients.shift();
+            const nextPatient = allPatients[0];
+            const patient = nextPatient.patient;
+            
+            // Remove from appropriate queue
+            switch(nextPatient.queue) {
+                case 'emergency':
+                    emergencyQueue = emergencyQueue.filter(p => p.id !== patient.id);
+                    break;
+                case 'critical':
+                    criticalQueue = criticalQueue.filter(p => p.id !== patient.id);
+                    break;
+                case 'checkup':
+                    checkupQueue = checkupQueue.filter(p => p.id !== patient.id);
+                    break;
+            }
+            
             servedPatients.push(patient);
             
-            logActivity(`🩺 Served Patient ${patient.id} (Score: ${patient.getPriorityScore()}, Wait: ${patient.getWaitTimeMinutes()} min)`);
+            logActivity(`🩺 Served Patient ${patient.id} from ${patient.serviceType} queue (Score: ${patient.getPriorityScore()}, Wait: ${patient.getWaitTimeMinutes()} min)`);
             updateQueueDisplay();
             updateStats();
         }
@@ -573,17 +635,32 @@
                 return;
             }
 
-            const patientIndex = patients.findIndex(p => p.id === id);
+            // Search in all queues
+            let patient = null;
+            let queueName = '';
             
-            if (patientIndex === -1) {
-                alert('Patient not found in queue!');
+            if (emergencyQueue.find(p => p.id === id)) {
+                patient = emergencyQueue.find(p => p.id === id);
+                emergencyQueue = emergencyQueue.filter(p => p.id !== id);
+                queueName = 'Emergency';
+            } else if (criticalQueue.find(p => p.id === id)) {
+                patient = criticalQueue.find(p => p.id === id);
+                criticalQueue = criticalQueue.filter(p => p.id !== id);
+                queueName = 'Critical';
+            } else if (checkupQueue.find(p => p.id === id)) {
+                patient = checkupQueue.find(p => p.id === id);
+                checkupQueue = checkupQueue.filter(p => p.id !== id);
+                queueName = 'Checkup';
+            }
+            
+            if (!patient) {
+                alert('Patient not found in any queue!');
                 return;
             }
 
-            const patient = patients.splice(patientIndex, 1)[0];
             servedPatients.push(patient);
             
-            logActivity(`🚨 Emergency served Patient ${patient.id} (Score: ${patient.getPriorityScore()}, Wait: ${patient.getWaitTimeMinutes()} min)`);
+            logActivity(`🚨 Emergency served Patient ${patient.id} from ${queueName} queue (Score: ${patient.getPriorityScore()}, Wait: ${patient.getWaitTimeMinutes()} min)`);
             updateQueueDisplay();
             updateStats();
             closeModal('emergencyModal');
@@ -627,18 +704,35 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
-                    simulationData = JSON.parse(e.target.result);
+                    const jsonData = JSON.parse(e.target.result);
                     
-                    // Validate JSON structure
-                    if (!Array.isArray(simulationData)) {
-                        throw new Error('JSON must contain an array of simulation events');
+                    // Handle different JSON structures
+                    if (Array.isArray(jsonData)) {
+                        // Direct array format
+                        simulationData = jsonData;
+                    } else if (jsonData.simulation_events && Array.isArray(jsonData.simulation_events)) {
+                        // Wrapped in simulation_events object
+                        simulationData = jsonData.simulation_events;
+                    } else if (jsonData.events && Array.isArray(jsonData.events)) {
+                        // Wrapped in events object
+                        simulationData = jsonData.events;
+                    } else {
+                        throw new Error('JSON must contain an array of simulation events or have simulation_events/events property');
                     }
 
                     // Validate each event
                     for (let i = 0; i < simulationData.length; i++) {
                         const event = simulationData[i];
-                        if (!event.time || !event.patientId || !event.urgency || !event.serviceType) {
-                            throw new Error(`Event ${i + 1} is missing required fields: time, patientId, urgency, serviceType`);
+                        
+                        // Check for different time field names
+                        const timeField = event.time || event.timestamp;
+                        if (!timeField || !event.patientId || !event.urgency || !event.serviceType) {
+                            throw new Error(`Event ${i + 1} is missing required fields: time/timestamp, patientId, urgency, serviceType`);
+                        }
+                        
+                        // Normalize the time field
+                        if (event.timestamp && !event.time) {
+                            event.time = event.timestamp;
                         }
                         
                         if (event.urgency < 1 || event.urgency > 5) {
@@ -670,35 +764,93 @@
                 return;
             }
 
-            // Sort events by time
-            simulationData.sort((a, b) => a.time - b.time);
-
             logActivity(`🎬 Starting JSON simulation with ${simulationData.length} events`);
+            logActivity(`🔍 First event data: ID=${simulationData[0].patientId}, Urgency=${simulationData[0].urgency}, Type=${simulationData[0].serviceType}`);
             
-            // Clear current queue for clean simulation
-            const confirmClear = confirm('This will clear the current queue. Continue?');
-            if (!confirmClear) return;
-            
-            patients = [];
-            updateQueueDisplay();
-            updateStats();
+            // Clear current queue for clean simulation (auto-confirm for testing)
+            logActivity(`✅ Queue cleared, starting simulation...`);
 
-            // Execute events with timing
-            simulationData.forEach((event, index) => {
-                setTimeout(() => {
-                    // Check if patient already exists
-                    if (!patients.find(p => p.id === event.patientId)) {
+            // Test: Add first patient immediately to verify Patient class works
+            try {
+                const testEvent = simulationData[0];
+                const testPatient = new Patient(testEvent.patientId, testEvent.urgency, testEvent.serviceType);
+                
+                // Add to appropriate queue
+                switch(testPatient.serviceType) {
+                    case 'Emergency':
+                        emergencyQueue.push(testPatient);
+                        break;
+                    case 'Critical':
+                        criticalQueue.push(testPatient);
+                        break;
+                    case 'Checkup':
+                        checkupQueue.push(testPatient);
+                        break;
+                }
+                
+                logActivity(`✅ Test patient added successfully: ${testEvent.patientId} to ${testPatient.serviceType} queue`);
+                updateQueueDisplay();
+                updateStats();
+                
+                // If test works, continue with the rest
+                let currentIndex = 1; // Start from second patient
+                
+                function addNextPatient() {
+                    if (currentIndex >= simulationData.length) {
+                        logActivity(`✅ JSON simulation completed! All ${simulationData.length} patients added`);
+                        return;
+                    }
+                    
+                    const event = simulationData[currentIndex];
+                    
+                    try {
                         const patient = new Patient(event.patientId, event.urgency, event.serviceType);
-                        patients.push(patient);
-                        logActivity(`🎬 JSON Event ${index + 1}: Added Patient ${event.patientId} (${event.serviceType}, Urgency: ${event.urgency})`);
+                        
+                        // Add to appropriate queue
+                        switch(patient.serviceType) {
+                            case 'Emergency':
+                                emergencyQueue.push(patient);
+                                break;
+                            case 'Critical':
+                                criticalQueue.push(patient);
+                                break;
+                            case 'Checkup':
+                                checkupQueue.push(patient);
+                                break;
+                        }
+                        
+                        logActivity(`🎬 Added Patient ${event.patientId} to ${patient.serviceType} queue (${currentIndex + 1}/${simulationData.length})`);
                         updateQueueDisplay();
                         updateStats();
-                    } else {
-                        logActivity(`⚠️ JSON Event ${index + 1}: Patient ${event.patientId} already exists, skipped`);
+                        
+                        currentIndex++;
+                        
+                        // Schedule next patient (30 seconds)
+                        if (currentIndex < simulationData.length) {
+                            setTimeout(addNextPatient, 30000); // 30,000 milliseconds = 30 seconds
+                        } else {
+                            logActivity(`🎉 All patients added successfully!`);
+                        }
+                    } catch (error) {
+                        logActivity(`❌ Error adding patient ${event.patientId}: ${error.message}`);
+                        currentIndex++;
+                        setTimeout(addNextPatient, 30000); // Continue with 30-second intervals even on error
                     }
-                }, event.time * 1000);
-            });
-
+                }
+                
+                // Start adding remaining patients
+                if (simulationData.length > 1) {
+                    logActivity(`⏳ Starting to add remaining ${simulationData.length - 1} patients every 30 seconds...`);
+                    setTimeout(addNextPatient, 30000); // First additional patient after 30 seconds
+                } else {
+                    logActivity(`✅ Single patient simulation completed!`);
+                }
+                
+            } catch (error) {
+                logActivity(`❌ Critical error: ${error.message}`);
+                alert(`Error creating patient: ${error.message}`);
+            }
+            
             closeModal('simulationModal');
         }
 
@@ -729,23 +881,48 @@
         }
 
         function showFrequentVisitors() {
-            const threshold = prompt('Enter visit threshold:', '3');
+            const threshold = prompt('Enter visit threshold:', '5');
             if (!threshold) return;
 
             const visitCounts = {};
+            
+            // Count visits from served patients
             servedPatients.forEach(p => {
                 visitCounts[p.id] = (visitCounts[p.id] || 0) + 1;
             });
+            
+            // Count current patients in all queues
+            [...emergencyQueue, ...criticalQueue, ...checkupQueue].forEach(p => {
+                visitCounts[p.id] = (visitCounts[p.id] || 0) + 1;
+            });
 
-            const frequent = Object.entries(visitCounts)
+            const frequentVisitors = Object.entries(visitCounts)
                 .filter(([id, count]) => count >= parseInt(threshold))
-                .map(([id, count]) => `Patient ${id}: ${count} visits`)
-                .join('\n');
+                .map(([id, count]) => {
+                    const bonusScore = count >= 5 ? Math.floor(count / 5) * 0.5 : 0;
+                    return {
+                        id: parseInt(id),
+                        visits: count,
+                        bonus: bonusScore
+                    };
+                })
+                .sort((a, b) => b.visits - a.visits);
 
-            if (frequent) {
-                alert(`Frequent Visitors (${threshold}+ visits):\n\n${frequent}`);
+            if (frequentVisitors.length > 0) {
+                let reportText = `Frequent Visitors (${threshold}+ visits):\n\n`;
+                frequentVisitors.forEach(visitor => {
+                    reportText += `Patient ${visitor.id}: ${visitor.visits} visits`;
+                    if (visitor.bonus > 0) {
+                        reportText += ` (+${visitor.bonus} priority bonus)`;
+                    }
+                    reportText += '\n';
+                });
+                
+                alert(reportText);
+                logActivity(`📊 Frequent visitors report generated: ${frequentVisitors.length} frequent visitors found`);
             } else {
                 alert('No frequent visitors found.');
+                logActivity(`📊 No frequent visitors found with threshold ${threshold}`);
             }
         }
 
@@ -774,22 +951,71 @@ Checkup: ${patients.filter(p => p.serviceType === 'Checkup').length}`;
         function updateQueueDisplay() {
             const display = document.getElementById('queueDisplay');
             
-            if (patients.length === 0) {
-                display.innerHTML = '<p style="text-align: center; color: #718096; padding: 40px;">No patients in queue</p>';
+            const totalPatients = emergencyQueue.length + criticalQueue.length + checkupQueue.length;
+            
+            if (totalPatients === 0) {
+                display.innerHTML = '<p style="text-align: center; color: #718096; padding: 40px;">No patients in any queue</p>';
                 return;
             }
 
-            // Sort by priority for display
-            const sortedPatients = [...patients].sort((a, b) => b.getPriorityScore() - a.getPriorityScore());
+            let html = '';
+            
+            // Emergency Queue
+            if (emergencyQueue.length > 0) {
+                const sortedEmergency = [...emergencyQueue].sort((a, b) => b.getPriorityScore() - a.getPriorityScore());
+                html += `
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="color: #e53e3e; border-bottom: 2px solid #e53e3e; padding-bottom: 5px;">
+                            🚨 Emergency Queue (${emergencyQueue.length} patients)
+                        </h4>
+                        ${renderQueueSection(sortedEmergency, 'emergency')}
+                    </div>
+                `;
+            }
+            
+            // Critical Queue
+            if (criticalQueue.length > 0) {
+                const sortedCritical = [...criticalQueue].sort((a, b) => b.getPriorityScore() - a.getPriorityScore());
+                html += `
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="color: #d69e2e; border-bottom: 2px solid #d69e2e; padding-bottom: 5px;">
+                            ⚠️ Critical Queue (${criticalQueue.length} patients)
+                        </h4>
+                        ${renderQueueSection(sortedCritical, 'critical')}
+                    </div>
+                `;
+            }
+            
+            // Checkup Queue
+            if (checkupQueue.length > 0) {
+                const sortedCheckup = [...checkupQueue].sort((a, b) => b.getPriorityScore() - a.getPriorityScore());
+                html += `
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="color: #38a169; border-bottom: 2px solid #38a169; padding-bottom: 5px;">
+                            📋 Checkup Queue (${checkupQueue.length} patients)
+                        </h4>
+                        ${renderQueueSection(sortedCheckup, 'checkup')}
+                    </div>
+                `;
+            }
 
-            display.innerHTML = sortedPatients.map((patient, index) => `
-                <div class="patient-card">
+            display.innerHTML = html;
+        }
+
+        function renderQueueSection(queuePatients, queueType) {
+            return queuePatients.map((patient, index) => {
+                const frequentVisitorBonus = patient.getFrequentVisitorBonus();
+                const bonusDisplay = frequentVisitorBonus > 0 ? 
+                    `<span style="color: #e53e3e; font-weight: bold;">+${frequentVisitorBonus} Frequent Visitor Bonus</span>` : '';
+                
+                return `
+                <div class="patient-card" style="border-left: 4px solid ${queueType === 'emergency' ? '#e53e3e' : queueType === 'critical' ? '#d69e2e' : '#38a169'};">
                     <div class="patient-header">
                         <span class="patient-id">#${index + 1} - Patient ${patient.id}</span>
                         <span class="urgency-badge urgency-${patient.urgency}">Urgency ${patient.urgency}</span>
                     </div>
                     <div>
-                        <strong>Priority Score:</strong> ${patient.getPriorityScore()}
+                        <strong>Priority Score:</strong> ${patient.getPriorityScore()} ${bonusDisplay}
                     </div>
                     <div>
                         <strong>Wait Time:</strong> ${patient.getWaitTimeMinutes()} minutes
@@ -799,13 +1025,18 @@ Checkup: ${patients.filter(p => p.serviceType === 'Checkup').length}`;
                         <span style="margin-left: 10px; font-size: 12px; color: #666;">
                             Visits: ${patient.visitCount}
                         </span>
+                        ${frequentVisitorBonus > 0 ? 
+                            `<span style="margin-left: 10px; font-size: 12px; color: #e53e3e; font-weight: bold;">
+                                🔄 Frequent Visitor
+                            </span>` : ''}
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         function updateStats() {
-            document.getElementById('totalPatients').textContent = patients.length + servedPatients.length;
+            const totalPatients = emergencyQueue.length + criticalQueue.length + checkupQueue.length + servedPatients.length;
+            document.getElementById('totalPatients').textContent = totalPatients;
             document.getElementById('servedCount').textContent = servedPatients.length;
             
             const avgWait = servedPatients.length > 0 
@@ -863,7 +1094,8 @@ Checkup: ${patients.filter(p => p.serviceType === 'Checkup').length}`;
 
         // Update wait times every minute
         setInterval(() => {
-            if (patients.length > 0) {
+            // Update wait times every minute
+            if (emergencyQueue.length > 0 || criticalQueue.length > 0 || checkupQueue.length > 0) {
                 updateQueueDisplay();
             }
         }, 60000);
